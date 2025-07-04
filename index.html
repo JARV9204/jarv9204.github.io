@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Personalidad: ¿Qué Tiburón Eres?</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Estilos personalizados para complementar Tailwind CSS */
+        body {
+            font-family: 'Sora', sans-serif; /* Tipografía: Sora */
+            background-color: #020617; /* bg-slate-950 */
+            background-image: radial-gradient(circle at top left, rgba(14, 165, 233, 0.1), transparent 30%),
+                              radial-gradient(circle at bottom right, rgba(34, 211, 238, 0.1), transparent 30%);
+        }
+
+        /* Animación de entrada */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        /* Efecto de brillo suave para botones */
+        .glow-on-hover {
+            transition: all 0.3s ease-in-out;
+        }
+
+        .glow-on-hover:hover {
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.5), 0 0 5px rgba(34, 211, 238, 0.3);
+            transform: scale(1.02);
+        }
+        
+        /* Estilo para la barra de progreso */
+        #progress-bar-fill {
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200 flex items-center justify-center min-h-screen p-4">
+
+    <main id="app-container" class="w-full max-w-2xl mx-auto">
+
+        <!-- Pantalla de Inicio -->
+        <section id="start-screen" class="text-center p-8 bg-slate-900/70 backdrop-blur-sm border border-slate-700 rounded-2xl shadow-2xl shadow-cyan-500/10">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-cyan-300 tracking-tight mb-4">DESCUBRE TU TIBURÓN INTERIOR</h1>
+            <p class="text-slate-300 mb-8 max-w-xl mx-auto">Los tiburones han dominado los océanos durante 450 millones de años. Su diversidad es inmensa. Responde a este test para descubrir qué especie legendaria refleja tu personalidad.</p>
+            <button id="start-btn" class="bg-cyan-500 text-slate-900 font-bold py-3 px-12 text-lg rounded-full glow-on-hover">
+                INICIAR TEST
+            </button>
+        </section>
+
+        <!-- Pantalla del Cuestionario -->
+        <section id="quiz-screen" class="hidden">
+            <div class="p-6 md:p-10 bg-slate-900/70 backdrop-blur-sm border border-slate-700 rounded-2xl shadow-2xl shadow-cyan-500/10">
+                <div id="progress-bar" class="w-full bg-slate-700 h-2 mb-6 rounded-full">
+                    <div id="progress-bar-fill" class="bg-cyan-400 h-2 rounded-full" style="width: 0%;"></div>
+                </div>
+                <h2 id="question-text" class="text-2xl md:text-3xl font-bold mb-8 text-slate-100"></h2>
+                <div id="answers-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Las respuestas se insertarán aquí dinámicamente -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Pantalla de Resultados -->
+        <section id="result-screen" class="hidden">
+             <div class="p-6 md:p-8 bg-slate-900/70 backdrop-blur-sm border border-cyan-400/30 rounded-2xl shadow-2xl shadow-cyan-500/20">
+                <h2 class="text-2xl font-bold text-center text-cyan-300 mb-2">Tu arquetipo es:</h2>
+                <h1 id="result-title" class="text-4xl md:text-5xl font-extrabold text-center text-white mb-6"></h1>
+                
+                <div class="space-y-6 text-slate-300">
+                     <p id="result-identity" class="text-slate-300 text-lg italic mb-6"></p>
+                    <div>
+                        <h3 class="font-bold text-xl text-cyan-400 mb-2">Fortalezas</h3>
+                        <p id="result-strengths"></p>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-xl text-cyan-400 mb-2">Desafíos</h3>
+                        <p id="result-challenges"></p>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-xl text-cyan-400 mb-2">Conexión con la Conservación</h3>
+                        <p id="result-conservation" class="text-sm italic text-slate-400"></p>
+                    </div>
+                </div>
+
+                <div class="text-center mt-10">
+                    <button id="retake-btn" class="bg-slate-700 text-cyan-300 font-bold py-3 px-12 text-lg rounded-full glow-on-hover">
+                        HACER EL TEST DE NUEVO
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- ELEMENTOS DEL DOM ---
+            const startScreen = document.getElementById('start-screen');
+            const quizScreen = document.getElementById('quiz-screen');
+            const resultScreen = document.getElementById('result-screen');
+            const startBtn = document.getElementById('start-btn');
+            const retakeBtn = document.getElementById('retake-btn');
+            const questionText = document.getElementById('question-text');
+            const answersContainer = document.getElementById('answers-container');
+            const progressBarFill = document.getElementById('progress-bar-fill');
+
+            // --- DATOS DEL CUESTIONARIO ---
+            const questions = [
+                { question: "Te enfrentas a un gran proyecto. ¿Cuál es tu estrategia?", answers: [{ text: "Investigo, planifico meticulosamente y actúo con una fuerza decisiva.", sharks: ['blanco'] },{ text: "Pruebo varias ideas a la vez, me adapto y aprovecho lo que funcione.", sharks: ['tigre'] },{ text: "Busco un ángulo innovador que nadie ha visto, usando herramientas únicas.", sharks: ['zorro', 'martillo'] },{ text: "Trabajo con constancia y paciencia, acumulando pequeños logros para un gran resultado.", sharks: ['ballena', 'nodriza'] }] },
+                { question: "En un evento social, ¿dónde te encontrarían?", answers: [{ text: "En el centro de todo, conectando con grandes grupos y generando energía.", sharks: ['martillo'] },{ text: "Observando desde la periferia, interactuando solo cuando es estratégico o necesario.", sharks: ['blanco', 'tigre'] },{ text: "En un rincón tranquilo, con un grupo pequeño y de confianza, recargando energías.", sharks: ['nodriza'] },{ text: "En una conversación profunda y significativa, uno a uno, sobre temas importantes.", sharks: ['anguila'] }] },
+                { question: "Si pudieras elegir un estilo de vida, ¿cuál sería?", answers: [{ text: "Nómada global, explorando constantemente nuevos territorios y oportunidades.", sharks: ['blanco', 'tigre', 'mako'] },{ text: "Tener una base segura y familiar, un santuario al que siempre volver.", sharks: ['nodriza'] },{ text: "Vivir en un lugar remoto y profundo, lejos del caos de la superficie.", sharks: ['anguila'] },{ text: "Ser un especialista que prospera en ambientes donde otros no pueden.", sharks: ['toro'] }] },
+                { question: "¿Cómo tomas decisiones importantes?", answers: [{ text: "Confío en mi intuición, en una 'corazonada' que lee el ambiente.", sharks: ['martillo', 'anguila'] },{ text: "Analizo datos y busco señales débiles para anticipar oportunidades o peligros.", sharks: ['blanco', 'tigre'] },{ text: "Me guío por la velocidad y la eficiencia, tomando decisiones rápidas y enfocadas.", sharks: ['mako'] },{ text: "De forma metódica, esperando que la oportunidad adecuada se presente.", sharks: ['nodriza', 'ballena'] }] },
+                { question: "Tu lema para el éxito es:", answers: [{ text: "'La unión hace la fuerza'. Colaborar es clave.", sharks: ['martillo'] },{ text: "'La paciencia es poder'. La estrategia a largo plazo siempre gana.", sharks: ['blanco', 'anguila'] },{ text: "'Adáptate o muere'. La flexibilidad es la mayor fortaleza.", sharks: ['tigre'] },{ text: "'Lento pero seguro'. La constancia metódica es invencible.", sharks: ['nodriza', 'ballena'] }] },
+                { question: "Cuando viajas, buscas...", answers: [{ text: "Destinos con un propósito claro, ya sea por trabajo o crecimiento personal.", sharks: ['blanco', 'ballena'] },{ text: "La comodidad del hogar, incluso en un lugar nuevo. Recreo mi santuario.", sharks: ['nodriza'] },{ text: "La emoción de lo desconocido, sin un plan fijo, dejándome llevar por la curiosidad.", sharks: ['tigre', 'mako'] },{ text: "Lugares con una profunda conexión social y cultural.", sharks: ['martillo'] }] },
+                { question: "Un problema complejo es como...", answers: [{ text: "Un banco de peces que debo rodear y desorientar con una táctica ingeniosa.", sharks: ['zorro'] },{ text: "Una presa oculta que debo detectar con mi sexto sentido antes de actuar.", sharks: ['martillo', 'anguila'] },{ text: "Una carrera de alta velocidad que debo ganar con enfoque y potencia.", sharks: ['mako'] },{ text: "Una oportunidad que debo evaluar con una 'mordida de prueba' antes de comprometerme.", sharks: ['blanco'] }] },
+                { question: "Prefieres pasar tu tiempo libre...", answers: [{ text: "En soledad, persiguiendo una pasión intensa y personal.", sharks: ['mako', 'tigre'] },{ text: "Descansando en un lugar tranquilo, rodeado de una presencia reconfortante pero sin interacción forzada.", sharks: ['nodriza'] },{ text: "En grandes reuniones sociales, absorbiendo la energía del grupo.", sharks: ['martillo'] },{ text: "Explorando vastos territorios, siempre en movimiento.", sharks: ['blanco', 'ballena'] }] }
+            ];
+            
+            const resultsData = {
+                blanco: {
+                    title: "El Tiburón Blanco: El Estratega Soberano",
+                    identity: "Eres un maestro de tu dominio. Impulsado, seguro y con una visión a largo plazo. A menudo percibido como solitario, en realidad eres un agudo observador de las dinámicas de poder. Tu enfoque es calculado y paciente, conservando energía para una acción decisiva y poderosa.",
+                    strengths: "Tu mente estratégica, paciencia y poder te permiten lograr lo que otros no pueden. Eres curioso, aprendes rápido y tu confianza inspira respeto.",
+                    challenges: "Tu intensidad puede ser intimidante o malinterpretada como agresión. Aprende a comunicar tus intenciones para evitar que tu naturaleza 'investigadora' aleje a los demás.",
+                    conservation: "Al igual que el poderoso Tiburón Blanco, clasificado como 'Vulnerable', tu fuerza puede ocultar una vulnerabilidad. Proteger tu energía es crucial para tu éxito a largo plazo."
+                },
+                martillo: {
+                    title: "El Tiburón Martillo: El Visionario Conectado",
+                    identity: "Eres el extrovertido y colaborador definitivo. Prosperas en entornos sociales, comprendiendo intuitivamente las dinámicas de grupo. Tu percepción 'ampliada' te permite ver el panorama general y detectar oportunidades que otros pasan por alto.",
+                    strengths: "Tu habilidad para construir redes y colaborar te lleva al éxito. Eres un líder natural que opera a través del consenso y la influencia. Tu visión de 360 grados te convierte en un innovador nato.",
+                    challenges: "Tu dependencia de la red social puede ser una debilidad si tu comunidad se desarticula. Asegúrate de cultivar también tu independencia y resiliencia interna.",
+                    conservation: "El Tiburón Martillo, 'En Peligro Crítico', es vulnerable por su naturaleza social. Esto te recuerda la importancia de proteger tus valiosas redes de contacto y tu comunidad."
+                },
+                tigre: {
+                    title: "El Tiburón Tigre: El Oportunista Adaptable",
+                    identity: "Eres el superviviente por excelencia. Ingenioso, curioso y no especializado, lo que te permite prosperar en una amplia gama de situaciones. No temes probar cosas nuevas y eres capaz de encontrar valor donde otros no lo ven.",
+                    strengths: "Tu adaptabilidad y resiliencia son casi ilimitadas. Eres un pensador independiente que confía en su propia capacidad para evaluar y explotar las oportunidades a medida que surgen.",
+                    challenges: "Tu enfoque generalista puede hacer que te cueste profundizar en un área. A veces, la especialización puede llevar a mayores recompensas. No dejes que la curiosidad se convierta en falta de enfoque.",
+                    conservation: "Considerado un espíritu guardián en Hawái, el Tiburón Tigre está 'Casi Amenazado'. Esto demuestra que incluso el más adaptable de los supervivientes necesita resiliencia frente a la adversidad."
+                },
+                ballena: {
+                    title: "El Tiburón Ballena: El Titán Gentil",
+                    identity: "Eres una personalidad de gran impacto pero de naturaleza no confrontacional. Operas a una escala que otros encuentran difícil de comprender. Tu éxito no proviene de la agresión, sino de un esfuerzo masivo, constante y paciente.",
+                    strengths: "Tu visión global y tu altruismo crean ecosistemas de oportunidades para otros. Eres tranquilo, seguro y tu presencia tiene un efecto estabilizador. Logras un éxito monumental a través de la persistencia.",
+                    challenges: "Tu naturaleza no confrontacional puede hacer que otros se aprovechen. Aprende a establecer límites firmes sin dejar de ser fiel a tu carácter apacible.",
+                    conservation: "El pez más grande del mundo está 'En Peligro'. Esto nos recuerda que los más grandes y gentiles son a menudo los más vulnerables a las actividades indiscriminadas. Tu impacto requiere protección."
+                },
+                nodriza: {
+                    title: "El Tiburón Nodriza: El Guardián Contemplativo",
+                    identity: "Eres un introvertido que valora la seguridad, la rutina y una comunidad tranquila. Recargas energía en la presencia pasiva de otros, pero abordas tus tareas de forma independiente y metódica. Eres un hogareño por naturaleza.",
+                    strengths: "Tu paciencia y tu enfoque metódico te permiten encontrar oportunidades que otros pasan por alto. Creas un santuario de estabilidad y seguridad para ti y los tuyos. Tu enfoque de bajo riesgo conserva tu energía para lo que importa.",
+                    challenges: "Tu aversión al riesgo y al cambio puede hacer que te pierdas oportunidades importantes. Anímate a salir de tu cueva de vez en cuando; el mundo es más seguro de lo que parece.",
+                    conservation: "La naturaleza dócil del Tiburón Nodriza lo convierte en un pilar del ecoturismo. Demuestra que un enfoque tranquilo y accesible puede ser inmensamente valioso y exitoso."
+                },
+                mako: {
+                    title: "El Tiburón Mako: El Dínamo Impulsado",
+                    identity: "Eres una personalidad de alta energía, intensa y extremadamente enfocada. Competitivo y ágil, prosperas en entornos de ritmo rápido. Cuando te fijas un objetivo, lo persigues con una velocidad y determinación inigualables.",
+                    strengths: "Tu velocidad y enfoque te hacen increíblemente eficiente. Eres el 'velocista' del mundo, capaz de lograr resultados rápidos a través de ráfagas de esfuerzo intenso. Tu energía es contagiosa.",
+                    challenges: "Puedes parecer impaciente o demasiado intenso para aquellos con un ritmo más lento. Tu enfoque singular puede hacer que te pierdas detalles importantes o matices sociales.",
+                    conservation: "El tiburón más rápido del océano está 'En Peligro'. Esto resalta la vulnerabilidad de las personalidades de 'alto rendimiento': tu propia excelencia puede atraer una presión insostenible."
+                },
+                zorro: {
+                    title: "El Tiburón Zorro: El Táctico No Convencional",
+                    identity: "Eres un pensador innovador y estratégico que no aborda los problemas de frente. En su lugar, utilizas herramientas y métodos únicos para lograr tus objetivos de manera indirecta, sorprendiendo a los demás con tus soluciones ingeniosas.",
+                    strengths: "Tu creatividad y astucia son tus mayores activos. No confías en la fuerza bruta, sino en la técnica y la inteligencia. Entiendes que el camino más inteligente rara vez es el más directo.",
+                    challenges: "Tu enfoque indirecto puede ser confuso para personas más directas. Asegúrate de que tus tácticas ingeniosas no se perciban como manipulación o evasión.",
+                    conservation: "Su método de caza único hace del Tiburón Zorro una maravilla evolutiva. Su vulnerabilidad a la captura incidental muestra cómo las estrategias especializadas pueden ser frágiles ante amenazas generalizadas."
+                },
+                anguila: {
+                    title: "El Tiburón Anguila: El Sabio Antiguo",
+                    identity: "Eres una personalidad introspectiva, de principios y algo misteriosa. Operas en un nivel de profundidad que pocos comprenden. No te influyen las tendencias pasajeras, sino que te guías por valores atemporales y bien establecidos.",
+                    strengths: "Tu autosuficiencia y tu comodidad en la soledad te dan una fuerza interior inmensa. Tu enfoque a muy largo plazo te permite invertir en proyectos que maduran lentamente pero tienen una base sólida y duradera.",
+                    challenges: "Tu naturaleza profunda y remota puede llevar al aislamiento. Recuerda que incluso el sabio más antiguo necesita emerger a la superficie de vez en cuando para conectar con el mundo.",
+                    conservation: "Este 'fósil viviente' representa la persistencia y la sabiduría. Su existencia en las profundidades estables es una metáfora de una personalidad que se mantiene fiel a sus principios, sin importar las tormentas que azoten la superficie."
+                }
+            };
+            
+            // --- LÓGICA DEL CUESTIONARIO ---
+            let currentQuestionIndex = 0;
+            let scores = {};
+
+            function startQuiz() {
+                currentQuestionIndex = 0;
+                scores = { blanco: 0, martillo: 0, tigre: 0, ballena: 0, nodriza: 0, mako: 0, zorro: 0, anguila: 0 };
+                startScreen.classList.add('hidden');
+                resultScreen.classList.add('hidden');
+                quizScreen.classList.remove('hidden');
+                quizScreen.classList.add('fade-in');
+                showQuestion();
+            }
+
+            function showQuestion() {
+                const question = questions[currentQuestionIndex];
+                questionText.textContent = question.question;
+                answersContainer.innerHTML = '';
+
+                question.answers.forEach(answer => {
+                    const button = document.createElement('button');
+                    button.innerHTML = answer.text;
+                    button.className = "w-full text-left p-4 bg-slate-800/80 border border-slate-700 hover:bg-cyan-900/50 hover:border-cyan-400 transition-all duration-300 rounded-lg";
+                    button.onclick = () => selectAnswer(answer.sharks);
+                    answersContainer.appendChild(button);
+                });
+                
+                const progress = ((currentQuestionIndex) / questions.length) * 100;
+                progressBarFill.style.width = `${progress}%`;
+            }
+
+            function selectAnswer(sharkTypes) {
+                sharkTypes.forEach(shark => {
+                    if (scores[shark] !== undefined) {
+                        scores[shark]++;
+                    }
+                });
+
+                currentQuestionIndex++;
+
+                if (currentQuestionIndex < questions.length) {
+                    showQuestion();
+                } else {
+                    progressBarFill.style.width = `100%`;
+                    setTimeout(showResult, 500); 
+                }
+            }
+
+            function showResult() {
+                const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+                const topShark = sortedScores[0][0];
+                const result = resultsData[topShark];
+
+                document.getElementById('result-title').textContent = result.title;
+                document.getElementById('result-identity').textContent = result.identity;
+                document.getElementById('result-strengths').textContent = result.strengths;
+                document.getElementById('result-challenges').textContent = result.challenges;
+                document.getElementById('result-conservation').textContent = result.conservation;
+
+                quizScreen.classList.add('hidden');
+                resultScreen.classList.remove('hidden');
+                resultScreen.classList.add('fade-in');
+            }
+            
+            // --- EVENT LISTENERS ---
+            startBtn.addEventListener('click', startQuiz);
+            retakeBtn.addEventListener('click', startQuiz);
+        });
+    </script>
+</body>
+</html>
